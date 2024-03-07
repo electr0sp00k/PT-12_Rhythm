@@ -1,6 +1,15 @@
 import csv
 from scipy.io import wavfile
 import numpy as np
+import librosa
+
+def pitch_shift(data, samplerate, semitones):
+    '''Shift the pitch of the waveform.'''
+    return librosa.effects.pitch_shift(data, n_steps=semitones, sr=samplerate)
+
+def adjust_volume(data, volume):
+    '''Adjust the volume of a waveform.'''
+    return data * (volume / 100.0)
 
 def construct_audio(csv_path, output_path):
     '''Constructs the waveform based on the specified pattern provided.'''
@@ -16,11 +25,15 @@ def construct_audio(csv_path, output_path):
 
         # Process each sample line
         for row in reader:
-            wav_file, *steps = row
+            wav_file, volume, pitch, *steps = row
+            volume = int(volume)
+            pitch = int(pitch)
             steps = [bool(int(x)) for x in steps]
             
             samplerate, data = wavfile.read(f"samples/{wav_file}")
             data = data.astype(np.float32)
+            data = pitch_shift(data, samplerate, pitch)
+            data = adjust_volume(data, volume)
             
             # Calculate the total duration based on the longest pattern
             total_steps = max(len(steps), max(len(track['steps']) for track in tracks) if tracks else 0)
