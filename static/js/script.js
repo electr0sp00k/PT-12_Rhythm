@@ -89,3 +89,24 @@ function createButton(text, onClick) {
     button.onclick = onClick;
     return button;
 }
+
+function removeStep(stepsContainer) {
+
+    // Get all step elements
+    const stepButtons = stepsContainer.querySelectorAll('.step-button');
+    const stepInputs = stepsContainer.querySelectorAll('input[type="hidden"]');
+
+    // Check if there are any step buttons to remove
+    if (stepButtons.length > 0) {
+        // Remove the last step button
+        const lastStepButton = stepButtons[stepButtons.length - 1];
+        lastStepButton.parentNode.removeChild(lastStepButton);
+    }
+
+    // Check if there are any hidden inputs to remove
+    if (stepInputs.length > 0) {
+        // Remove the last hidden input
+        const lastStepInput = stepInputs[stepInputs.length - 1];
+        lastStepInput.parentNode.removeChild(lastStepInput);
+    }
+}
