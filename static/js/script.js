@@ -1,4 +1,17 @@
 document.addEventListener('DOMContentLoaded', function() {
+    // AJAX form submission
+    const form = document.getElementById('sequence');
+    form.onsubmit = function(e) {
+        e.preventDefault();
+        const formData = new FormData(form);
+        fetch('/update_csv', {
+            method: 'POST',
+            body: formData,
+        })
+        .then(response => response.text())
+        .then(data => console.log(data))
+        .catch(error => console.error('Error:', error));
+    };
     const addSampleButton = document.getElementById('add-sample-btn');
     if (addSampleButton) {
         addSampleButton.addEventListener('click', addSample);
