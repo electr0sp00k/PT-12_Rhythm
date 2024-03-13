@@ -8,8 +8,20 @@ document.addEventListener('DOMContentLoaded', function() {
             method: 'POST',
             body: formData,
         })
-        .then(response => response.text())
-        .then(data => console.log(data))
+        .then(response => response.json())
+        .then(data => {
+            console.log(data);
+            let audioPlayer = document.querySelector('audio');
+            // If no audioplayer loaded, load one
+            if (!audioPlayer) {
+                audioPlayer = document.createElement('audio');
+                audioPlayer.controls = true;
+                document.body.appendChild(audioPlayer);
+            }
+            // Serve the newly baked audio loop
+            audioPlayer.innerHTML = `<source src="${data.audio_path}" type="audio/wav">Audio playback not supported in your browser.`;
+            audioPlayer.load();
+        })
         .catch(error => console.error('Error:', error));
     };
     const addSampleButton = document.getElementById('add-sample-btn');

@@ -1,4 +1,6 @@
-from flask import Flask, render_template, request
+from flask import Flask, render_template, request, jsonify, url_for
+import os
+from construct_audio import construct_audio
 
 app = Flask(__name__)
 
@@ -37,8 +39,11 @@ def update_csv():
         for sample, volume, pitch, steps_str in zip(samples, volumes, pitches, steps_list):
             row = f"{sample},{volume},{pitch},{steps_str}\n"
             csvfile.write(row)
-
-    return 'CSV updated'
+ 
+    audio_file = 'output.wav'
+    output_path = os.path.join('static', audio_file)
+    construct_audio('pattern.csv', output_path)
+    return jsonify({'audio_path': url_for('static', filename=audio_file)})
 
 if __name__ == "__main__":
     app.run(debug=True)
