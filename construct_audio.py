@@ -26,19 +26,37 @@ def construct_audio(csv_path, output_path):
         # Process each sample line
         for row in reader:
             wav_file, volume, pitch, *steps = row
-            volume = int(volume)
-            pitch = int(pitch)
+
+            # Defaults for volume and pitch
+            try:
+                volume = int(row[1]) if row[1] else 100
+            except ValueError:
+                pass
+            
+            try:
+                pitch = int(row[2]) if row[2] else 0
+            except ValueError:
+                pass
+
             steps = [bool(int(x)) for x in steps]
             
+            # Read sample, convert to mono and float
             samplerate, data = wavfile.read(f"samples/{wav_file}")
+            if data.ndim == 2:
+                data = data.mean(axis=1)
+
             data = data.astype(np.float32)
-            data = pitch_shift(data, samplerate, pitch)
+            
+            # Handle for a variety of sample rates by resampling as 41000
+            output_samplerate = 41000
+            data = librosa.resample(data, orig_sr=samplerate, target_sr=output_samplerate)
+            
+            data = pitch_shift(data, output_samplerate, pitch)
             data = adjust_volume(data, volume)
             
             # Calculate the total duration based on the longest pattern
             total_steps = max(len(steps), max(len(track['steps']) for track in tracks) if tracks else 0)
             total_duration = step_duration * total_steps
-            output_samplerate = samplerate
             
             # Create an empty array for this track
             track_data = np.zeros(int(total_duration * output_samplerate))

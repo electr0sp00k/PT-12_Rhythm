@@ -41,12 +41,19 @@ function addSample() {
     // sample selector
     const sampleSelect = document.createElement('select');
     sampleSelect.name = 'samples[]';
-    ['kick.wav', 'snare.wav'].forEach(file => {
-        const option = document.createElement('option');
-        option.value = file;
-        option.textContent = file;
-        sampleSelect.appendChild(option);
-    });
+
+    // Fetch sample list from flask
+    fetch('/list_samples')
+        .then(response => response.json())
+        .then(files => {
+            files.forEach(file => {
+                const option = document.createElement('option');
+                option.value = file;
+                option.textContent = file;
+                sampleSelect.appendChild(option);
+            });
+        })
+        .catch(error => console.error('Error fetching sample files:', error));
     sampleDiv.appendChild(sampleSelect);
 
     // Volume input

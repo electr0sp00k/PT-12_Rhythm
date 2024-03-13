@@ -8,6 +8,19 @@ app = Flask(__name__)
 def index():
     return render_template('index.html')
 
+# Returns the list of wav files in the samples directory
+@app.route('/list_samples')
+def list_samples():
+    samples_directory = 'samples'
+    try:
+        files = os.listdir(samples_directory)
+        # Filter out non-WAV files
+        wav_files = [file for file in files if file.endswith('.wav')]
+        return jsonify(wav_files)
+    except Exception as e:
+        return jsonify({"error": str(e)})
+
+
 @app.route('/update_csv', methods=['POST'])
 def update_csv():
 
@@ -46,4 +59,4 @@ def update_csv():
     return jsonify({'audio_path': url_for('static', filename=audio_file)})
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(debug=False)
