@@ -18,8 +18,10 @@ document.addEventListener('DOMContentLoaded', function() {
                 audioPlayer.controls = true;
                 document.body.appendChild(audioPlayer);
             }
+            // Time Stamp to cachebash
+            const timestamp = new Date().getTime();
             // Serve the newly baked audio loop
-            audioPlayer.innerHTML = `<source src="${data.audio_path}" type="audio/wav">Audio playback not supported in your browser.`;
+            audioPlayer.innerHTML = `<source src="${data.audio_path}?${timestamp}" type="audio/wav">Audio playback not supported in your browser.`;
             audioPlayer.load();
         })
         .catch(error => console.error('Error:', error));
