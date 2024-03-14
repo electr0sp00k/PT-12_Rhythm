@@ -17,26 +17,35 @@ def construct_audio(csv_path, output_path):
         reader = csv.reader(csv_file)
         # First line: BPM
         bpm = int(next(reader)[0])
-        # Calculate duration of each step in seconds
+
+        # Find the longest sequence in CSV 
+        total_steps = max(len(row[4:]) for row in reader)
+
+        print(f"total steps: {total_steps}")
+
+        # Reset reader to beginning
+        csv_file.seek(0)
+        next(reader)
+
+        #Define output sample rate
+        output_samplerate = 41000
+
+        # Calculate duration of each step in seconds, samples
         step_duration = 60.0 / bpm
+        step_duration_samples = int(step_duration * output_samplerate)
+        total_duration_samples = int(step_duration_samples * total_steps)
 
         # Initialize an empty list to store each track
         tracks = []
 
         # Process each sample line
         for row in reader:
-            wav_file, volume, pitch, *steps = row
+            wav_file, volume, pitch, step_multiplier, *steps = row
 
             # Defaults for volume and pitch
-            try:
-                volume = int(row[1]) if row[1] else 100
-            except ValueError:
-                pass
-            
-            try:
-                pitch = int(row[2]) if row[2] else 0
-            except ValueError:
-                pass
+            volume = int(volume) if volume else 100
+            pitch = int(pitch) if pitch else 0
+            step_multiplier = max(1, min(8, int(step_multiplier) if step_multiplier else 1))
 
             steps = [bool(int(x)) for x in steps]
             
@@ -48,29 +57,32 @@ def construct_audio(csv_path, output_path):
             data = data.astype(np.float32)
             
             # Handle for a variety of sample rates by resampling as 41000
-            output_samplerate = 41000
             data = librosa.resample(data, orig_sr=samplerate, target_sr=output_samplerate)
+            sample_length = len(data)
             
+            # Pitch shift and volume
             data = pitch_shift(data, output_samplerate, pitch)
             data = adjust_volume(data, volume)
-            
-            # Calculate the total duration based on the longest pattern
-            total_steps = max(len(steps), max(len(track['steps']) for track in tracks) if tracks else 0)
-            total_duration = step_duration * total_steps
-            
+
+
             # Create an empty array for this track
-            track_data = np.zeros(int(total_duration * output_samplerate))
+            track_data = np.zeros(total_duration_samples)
             
-            for i, on_this_beat in enumerate(steps):
-                if on_this_beat:
-                    start = int(i * step_duration * output_samplerate)
-                    end = start + len(data)
-                    track_data[start:end] += data[:len(track_data[start:end])]
+            # Length of step during step multiply
+            sub_step_samples = step_duration_samples // step_multiplier
+            
+            for i, step in enumerate(steps):
+                if int(step):
+                    for n in range(step_multiplier):
+                        start = i * step_duration_samples + n * sub_step_samples
+                        end = min(start + sample_length, total_duration_samples)
+                        track_data[start:end] = data[:(end - start)]
                     
             tracks.append({'data': track_data, 'steps': steps})
             
         # Take the longest track as the base
-        output_data = np.zeros_like(max(tracks, key=lambda x: len(x['data']))['data'])
+        #output_data = np.zeros_like(max(tracks, key=lambda x: len(x['data']))['data'])
+        output_data = np.zeros(total_duration_samples)
         
         for track in tracks:
             output_data[:len(track['data'])] += track['data']
