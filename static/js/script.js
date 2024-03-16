@@ -18,6 +18,9 @@ document.addEventListener('DOMContentLoaded', function() {
                 audioPlayer.controls = true;
                 document.body.appendChild(audioPlayer);
             }
+            audioPlayer.autoplay = true;
+            audioPlayer.loop = true;
+            audioPlayer.controls = true;
             // Time Stamp to cachebash
             const timestamp = new Date().getTime();
             // Serve the newly baked audio loop
@@ -64,6 +67,20 @@ function addSample() {
     const pitchInput = createInput('pitch', 'Pitch: +/- Semitones');
     sampleDiv.appendChild(pitchInput);
 
+    // Step multiplier
+    const stepMultSelect = document.createElement('select');
+    stepMultSelect.name = 'step_mult[]';
+    for (let i = 1; i <= 8; i++) {
+        const option = document.createElement('option');
+        option.value = i.toString();
+        option.textContent = i.toString();
+        if (i === 1) {
+            option.selected = true;
+        }
+        stepMultSelect.appendChild(option);
+    }
+    sampleDiv.appendChild(stepMultSelect);
+
     // Steps container
     const stepsDiv = document.createElement('div');
     stepsDiv.className = 'steps-container';
@@ -78,8 +95,8 @@ function addSample() {
     const removeStepBtn = createButton('- Step', () => removeStep(stepsDiv));
     sampleDiv.appendChild(removeStepBtn);
 
-    // Remove sample button
-    const removeSampleBtn = createButton('Remove Sample', () => samplesDiv.removeChild(sampleDiv));
+    // Remove sample button (reindex on deletion)
+    const removeSampleBtn = createButton('Remove Sample', () => {samplesDiv.removeChild(sampleDiv); reindexSamples();});
     sampleDiv.appendChild(removeSampleBtn);
 
     samplesDiv.appendChild(sampleDiv);
@@ -143,4 +160,16 @@ function removeStep(stepsContainer) {
         const lastStepInput = stepInputs[stepInputs.length - 1];
         lastStepInput.parentNode.removeChild(lastStepInput);
     }
+}
+
+// Fixes an issue where the index of the steps is not updated when a sample is removed
+function reindexSamples() {
+    const samples = document.querySelectorAll('.sample');
+    samples.forEach((sample, index) => {
+        const stepInputs = sample.querySelectorAll('input[name^="steps["]');
+        stepInputs.forEach(input => {
+            const newName = `steps[${index + 1}][]`;
+            input.name = newName;
+        });
+    });
 }

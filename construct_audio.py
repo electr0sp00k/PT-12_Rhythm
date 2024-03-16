@@ -47,7 +47,7 @@ def construct_audio(csv_path, output_path):
             pitch = int(pitch) if pitch else 0
             step_multiplier = max(1, min(8, int(step_multiplier) if step_multiplier else 1))
 
-            steps = [bool(int(x)) for x in steps]
+            steps = [max(0, bool(int(x))) if x else 0 for x in steps]
             
             # Read sample, convert to mono and float
             samplerate, data = wavfile.read(f"samples/{wav_file}")
@@ -80,8 +80,7 @@ def construct_audio(csv_path, output_path):
                     
             tracks.append({'data': track_data, 'steps': steps})
             
-        # Take the longest track as the base
-        #output_data = np.zeros_like(max(tracks, key=lambda x: len(x['data']))['data'])
+        # Create buffer for final output
         output_data = np.zeros(total_duration_samples)
         
         for track in tracks:

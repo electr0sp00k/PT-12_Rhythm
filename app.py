@@ -31,10 +31,13 @@ def update_csv():
     samples = request.form.getlist('samples[]')
     volumes = request.form.getlist('volume[]')
     pitches = request.form.getlist('pitch[]')
+    step_mults = request.form.getlist('step_mult[]')
 
-    print(f"Samples:{samples}")
+    """ print(f"Samples:{samples}")
     print(f"volume:{volumes}")
     print(f"pitches:{pitches}")
+    print(f"step_mult:{step_mults}") """
+    
     
     # Initialize list for steps
     steps_list = []
@@ -49,8 +52,8 @@ def update_csv():
         # BPM at the top
         csvfile.write(f"{bpm}\n")
         # Iterate through and construct each row
-        for sample, volume, pitch, steps_str in zip(samples, volumes, pitches, steps_list):
-            row = f"{sample},{volume},{pitch},{steps_str}\n"
+        for sample, volume, pitch, step_mult, steps_str in zip(samples, volumes, pitches, step_mults, steps_list):
+            row = f"{sample},{volume},{pitch},{step_mult},{steps_str}\n"
             csvfile.write(row)
  
     audio_file = 'output.wav'
